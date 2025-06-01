@@ -9,7 +9,7 @@ def main():
     # Uncomment this to pass the first stage
     server_socket = create_server(address=("127.0.0.1", 4221), reuse_port=True)
     server_socket.accept() # wait for client
-    server_socket.send("HTTP/1.1 200 OK\r\n\r\n".encode("ASCII"))
+    server_socket.send(b"HTTP/1.1 200 OK\r\n\r\n")
 
 
 def create_server(address: tuple, reuse_port: bool = False, backlog: int|None = None):
