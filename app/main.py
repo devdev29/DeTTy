@@ -2,14 +2,12 @@ import socket  # noqa: F401
 import os
 
 
-SERVER_ADDR = ("127.0.0.1", 8000)
-
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
     
     # Uncomment this to pass the first stage
-    server_socket = create_server(address=SERVER_ADDR, reuse_port=True)
+    server_socket = create_server(address=("127.0.0.1", 4221), reuse_port=True)
     server_socket.accept() # wait for client
     server_socket.send("HTTP/1.1 200 OK\r\n\r\n")
 
