@@ -70,10 +70,9 @@ def main():
         connection.send(response)
     connection.close()
 
-
+socket.create_server
 def create_server(address: tuple, reuse_port: bool = False, backlog: int|None = None):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(address)
     if os.name not in ('nt', 'cygwin'):
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     if reuse_port:
@@ -81,6 +80,7 @@ def create_server(address: tuple, reuse_port: bool = False, backlog: int|None = 
             server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         except:
             raise ValueError("SO_REUSEPORT not supported on this platform")
+    server_socket.bind(address)
     if backlog:
         server_socket.listen(backlog)
     else:
