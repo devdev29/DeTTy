@@ -64,11 +64,9 @@ def main():
     target_resource = incoming_request.request_line['resource']
     if target_resource not in valid_targets:
         response = str(HttpResponse(status_code='404', reason_phrase='Not Found')).encode('ASCII')
-        print(response)
         connection.send(response)
     else:
         response = str(HttpResponse(status_code='200',reason_phrase='OK')).encode('ASCII')
-        print(response)
         connection.send(response)
     connection.close()
 
