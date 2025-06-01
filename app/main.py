@@ -1,15 +1,25 @@
 import socket  # noqa: F401
 import os
 
+from http_request import HttpRequest
+from http_response import HttpResponse
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
+    valid_targets = ['/']
     
     # Uncomment this to pass the first stage
     server_socket = create_server(address=("127.0.0.1", 4221), reuse_port=True)
-    server_socket.accept()[0].send(b"HTTP/1.1 200 OK\r\n\r\n")
-    server_socket.accept() # wait for client
+    request_string = server_socket.accept()[0].recv(1024).decode()
+    incoming_request =  HttpRequest(request_string=request_string)# wait for client
+    target_resource = incoming_request.request_line['resource']
+    if target_resource not in valid_targets:
+        response = str(HttpResponse(status_code='404', reason_phrase='Not Found')).encode('ASCII')
+        server_socket.accept()[0].send(response)
+    else:
+        response = str(HttpResponse(status_code='200',reason_phrase='OK'))
+        server_socket.accept()[0].send(response)
 
 
 def create_server(address: tuple, reuse_port: bool = False, backlog: int|None = None):
