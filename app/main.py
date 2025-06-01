@@ -57,7 +57,7 @@ def main():
     valid_targets = ['/']
     
     # Uncomment this to pass the first stage
-    server_socket = create_server(address=("127.0.0.1", 4221), reuse_port=False)
+    server_socket = create_server(address=("127.0.0.1", 4221), reuse_port=True)
     connection = server_socket.accept()[0]
     request_string = connection.recv(1024).decode()
     incoming_request =  HttpRequest(request_string=request_string)# wait for client
