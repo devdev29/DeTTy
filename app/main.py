@@ -1,8 +1,11 @@
 import socket  # noqa: F401
 import os
+import sys
 
 from http_request import HttpRequest
 from http_response import HttpResponse
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
