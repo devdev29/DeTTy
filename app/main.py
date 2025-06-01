@@ -2,8 +2,7 @@ import socket  # noqa: F401
 import os
 import sys
 
-from http_request import HttpRequest
-from http_response import HttpResponse
+from dataclasses import dataclass,field
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -13,16 +12,20 @@ def main():
     valid_targets = ['/']
     
     # Uncomment this to pass the first stage
-    server_socket = create_server(address=("127.0.0.1", 4221), reuse_port=True)
-    request_string = server_socket.accept()[0].recv(1024).decode()
+    server_socket = create_server(address=("127.0.0.1", 4221), reuse_port=False)
+    connection = server_socket.accept()[0]
+    request_string = connection.recv(1024).decode()
     incoming_request =  HttpRequest(request_string=request_string)# wait for client
     target_resource = incoming_request.request_line['resource']
     if target_resource not in valid_targets:
         response = str(HttpResponse(status_code='404', reason_phrase='Not Found')).encode('ASCII')
-        server_socket.accept()[0].send(response)
+        print(response)
+        connection.send(response)
     else:
-        response = str(HttpResponse(status_code='200',reason_phrase='OK'))
-        server_socket.accept()[0].send(response)
+        response = str(HttpResponse(status_code='200',reason_phrase='OK')).encode('ASCII')
+        print(response)
+        connection.send(response)
+    connection.close()
 
 
 def create_server(address: tuple, reuse_port: bool = False, backlog: int|None = None):
@@ -43,3 +46,47 @@ def create_server(address: tuple, reuse_port: bool = False, backlog: int|None = 
 
 if __name__ == "__main__":
     main()
+
+class HttpRequest:
+    def __init__(self, request_string: str):
+        request_list = request_string.split('\r\n')
+        self.request_line = self.extract_request_line(request_list)
+        self.request_headers = self.extract_request_headers(request_list)
+        self.request_body = request_list[-1] 
+    
+    def extract_request_line(self, request_list: list):
+        request_line = request_list[0]
+        request_components = request_line.split(' ')
+        if len(request_components) != 3:
+            raise ValueError('Invalid HTTP request format')
+        return {'method':request_components[0], 'resource':request_components[1], 'version':request_components[2]}
+
+    def extract_request_headers(self, request_list: list):
+        request_headers_raw = request_list[1:-2]
+        request_headers = {}
+        if not request_headers_raw:
+                raise ValueError('No HTTP headers found, you must specify at least Host for this to be a valid HTTP request')
+        for raw_header in request_headers_raw:
+            header, value = raw_header.split(':',1)
+            request_headers.update({header: value.lstrip()})
+
+@dataclass
+class HttpResponse:
+    status_code: str
+    reason_phrase: str
+    http_version: str = "HTTP/1.1"
+    response_headers: dict[str, str] = field(default_factory=dict)
+    response_body: str = ''
+
+    def __str__(self):
+        status_line = f'{self.http_version} {self.status_code} {self.reason_phrase}\r\n'
+        http_response_string = status_line
+        if self.response_headers:
+            for header, value in self.response_headers:
+                response_header = f'{header}: {value}\r\n'
+                http_response_string+=response_header
+        else:
+            http_response_string+='\r\n'
+        if self.response_body:
+            http_response_string+=f'{self.response_body}\r\n'
+        return http_response_string
