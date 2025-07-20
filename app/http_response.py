@@ -4,7 +4,7 @@ from dataclasses import dataclass,field
 class HttpResponse:
     status_code: str
     reason_phrase: str
-    http_version: str = "HTTP/1.1"
+    http_version: str = 'HTTP/1.1'
     response_headers: dict[str, str] = field(default_factory=dict)
     response_body: str = ''
 
@@ -20,3 +20,6 @@ class HttpResponse:
         if self.response_body:
             http_response_string+=f'{self.response_body}\r\n'
         return http_response_string
+    
+    def __repr__(self):
+        return str(self)
