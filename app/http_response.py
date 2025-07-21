@@ -13,6 +13,7 @@ class HttpResponse:
     def __str__(self):
         status_line = f'{self.http_version} {self.status_code} {self.reason_phrase}\r\n'
         http_response_string = status_line
+        self.response_headers['Content-Type']=self.media_type
         if self.response_headers:
             for header, value in self.response_headers:
                 response_header = f'{header}: {value}\r\n'
