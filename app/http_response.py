@@ -1,4 +1,5 @@
 from dataclasses import dataclass,field
+from typing import Any
 
 @dataclass
 class HttpResponse:
@@ -6,8 +7,8 @@ class HttpResponse:
     reason_phrase: str
     http_version: str = 'HTTP/1.1'
     response_headers: dict[str, str] = field(default_factory=dict)
-    response_body = ''
     media_type: str = 'text/plain; charset=utf-8'
+    response_body: Any = ''
 
     def __str__(self):
         status_line = f'{self.http_version} {self.status_code} {self.reason_phrase}\r\n'
