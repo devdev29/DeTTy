@@ -8,12 +8,15 @@ class HttpResponse:
     http_version: str = 'HTTP/1.1'
     response_headers: dict[str, str] = field(default_factory=dict)
     media_type: str = 'text/plain; charset=utf-8'
-    response_body: Any = ''
+    response_body: str = ''
 
     def __str__(self):
         status_line = f'{self.http_version} {self.status_code} {self.reason_phrase}\r\n'
         http_response_string = status_line
+        content_length = len(self.response_body.encode('ASCII'))
+        
         self.response_headers['Content-Type']=self.media_type
+        self.response_headers['Content-Length']=content_length
         if self.response_headers:
             for header, value in self.response_headers.items():
                 response_header = f'{header}: {value}\r\n'
