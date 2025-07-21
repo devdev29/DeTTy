@@ -1,4 +1,4 @@
-from http_constants import HttpStatusCodes, HttpReasonPhrases
+from app.http_constants import HttpStatusCodes, HttpReasonPhrases
 
 #EXTERNAL ERRORS
 #All external errors must have an HTTP status code associated with them

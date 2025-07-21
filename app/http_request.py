@@ -1,4 +1,4 @@
-from exceptions import NoHeadersFoundError, InvalidBodyError
+from app.exceptions import NoHeadersFoundError, InvalidBodyError
 
 class HttpRequest:
     def __init__(self, request_string: str):

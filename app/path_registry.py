@@ -84,26 +84,3 @@ class PathRegistry:
             raise ArgumentCountMismatchError(n_params, function_params)
         #If there are no problems then proceed to set the function to the one user gave
         prev_node['function'] = func
-
-if __name__=='__main__':
-    pr = PathRegistry()
-
-    @pr.register('/register/animal/{id}', 'GET')
-    def echo_animal(id: str):
-        return id
-
-    @pr.register('/register/person/{id}', 'GET')
-    def echo_person(id: str):
-        return id
-
-    @pr.register('/person/devansh', 'GET')
-    def says_hi():
-        return 'Hi!'
-    
-    # pr.register('/register/person/{id}', 'GET', echo)
-    # pr.register('/register/animal/{id}', 'GET', echo)
-    print(pr.registered_paths)
-    dog = pr.evaluate('/register/animal/dog', 'GET')
-    person = pr.evaluate('/register/person/shubh', 'GET')
-    devansh = pr.evaluate('/person/devansh', 'GET')
-    print(dog, person, devansh)

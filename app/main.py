@@ -2,10 +2,10 @@ import socket  # noqa: F401
 import os
 import sys
 
-from http_request import HttpRequest
-from http_response import HttpResponse
-from http_constants import HttpStatusCodes, HttpReasonPhrases
-from path_registry import PathRegistry
+from app.http_request import HttpRequest
+from app.http_response import HttpResponse
+from app.http_constants import HttpStatusCodes, HttpReasonPhrases
+from app.path_registry import PathRegistry
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
