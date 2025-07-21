@@ -15,9 +15,10 @@ class HttpResponse:
         http_response_string = status_line
         self.response_headers['Content-Type']=self.media_type
         if self.response_headers:
-            for header, value in self.response_headers:
+            for header, value in self.response_headers.items():
                 response_header = f'{header}: {value}\r\n'
                 http_response_string+=response_header
+            http_response_string+='\r\n'
         else:
             http_response_string+='\r\n'
         if self.response_body:
