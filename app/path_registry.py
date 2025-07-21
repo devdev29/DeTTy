@@ -3,7 +3,7 @@ import inspect
 
 from typing import Optional
 
-from exceptions import PathAlreadyExistsError, ArgumentCountMismatchError, PathNotFoundError
+from app.exceptions import PathAlreadyExistsError, ArgumentCountMismatchError, PathNotFoundError
 
 class PathRegistry:
     registered_paths = {}
