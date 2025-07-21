@@ -30,10 +30,7 @@ def main():
     
     try:
         result = pr.evaluate(target_resource, method)
-        if result:
-            response = str(HttpResponse(status_code=HttpStatusCodes.OK, reason_phrase=HttpReasonPhrases.OK, response_body=result)).encode('ASCII')
-        else:
-            response = str(HttpResponse(status_code=HttpStatusCodes.OK, reason_phrase=HttpReasonPhrases.OK)).encode('ASCII')
+        response = str(result).encode('ASCII')
     except Exception as e:
         if hasattr(e, 'code'):
             response = str(HttpResponse(status_code=e.code, reason_phrase=e.reason_phrase)).encode('ASCII')

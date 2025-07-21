@@ -3,6 +3,8 @@ import inspect
 
 from typing import Optional
 
+from app.http_response import HttpResponse
+from app.http_constants import HttpStatusCodes, HttpReasonPhrases
 from app.exceptions import PathAlreadyExistsError, ArgumentCountMismatchError, PathNotFoundError
 
 class PathRegistry:
@@ -27,7 +29,7 @@ class PathRegistry:
             return func
         return decorator
     
-    def evaluate(self, path_string: str, method: str):
+    def evaluate(self, path_string: str, method: str, media_type: str = None):
         node_list = path_string.split('/')
         curr_node = self.registered_paths[method]
         func_args = {}
@@ -43,7 +45,14 @@ class PathRegistry:
         
         func = curr_node['function']
         if func is not None:
-            return func(**func_args)
+            result = func(**func_args)
+            if not media_type:
+                media_type = self.infer_media_type(result)
+            if result:
+                response = HttpResponse(status_code=HttpStatusCodes.OK, reason_phrase=HttpReasonPhrases.OK, response_body=result, media_type=media_type)
+            else:
+                response = HttpResponse(status_code=HttpStatusCodes.OK, reason_phrase=HttpReasonPhrases.OK)
+            return response
         else:
             raise PathNotFoundError(path_string)
         
@@ -84,3 +93,11 @@ class PathRegistry:
             raise ArgumentCountMismatchError(n_params, function_params)
         #If there are no problems then proceed to set the function to the one user gave
         prev_node['function'] = func
+
+    def infer_media_type(self, response_body):
+        if isinstance(response_body, str):
+            return 'text/plain; charset=utf-8'
+        elif isinstance(response_body, (dict, list)):
+            return 'application/json'
+        elif isinstance(response_body, bytes):
+            return 'application/octet-stream'
