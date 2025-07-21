@@ -96,7 +96,7 @@ class PathRegistry:
 
     def infer_media_type(self, response_body):
         if isinstance(response_body, str):
-            return 'text/plain; charset=utf-8'
+            return 'text/plain'
         elif isinstance(response_body, (dict, list)):
             return 'application/json'
         elif isinstance(response_body, bytes):
