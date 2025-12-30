@@ -1,27 +1,42 @@
-from app.http_constants import HttpStatusCodes, HttpReasonPhrases
+from abc import ABC, abstractmethod
 
+from app.http_constants import HttpStatus
+
+class ExternalError(Exception, ABC):
+    def __init__(self, code: str, reason_phrase: str):
+        self.code = code
+        self.reason_phrase = reason_phrase
+    
+    @abstractmethod
+    def __str__(self) -> str:
+        ...
+    
 #EXTERNAL ERRORS
 #All external errors must have an HTTP status code associated with them
-class NoHeadersFoundError(ValueError):
+class NoHeadersFoundError(ExternalError):
     def __init__(self):
-        self.code = HttpStatusCodes.BAD_REQUEST
-        self.reason_phrase = HttpReasonPhrases.BAD_REQUEST
+        super().__init__(HttpStatus.BAD_REQUEST.code, HttpStatus.BAD_REQUEST.phrase)
     def __str__(self):
         return 'No headers found on the request'
 
-class InvalidBodyError(Exception):
+class InvalidBodyError(ExternalError):
     def __init__(self, request_string):
+        super().__init__(HttpStatus.BAD_REQUEST.code, HttpStatus.BAD_REQUEST.phrase)
         self.request_string = request_string
-        self.code = HttpStatusCodes.BAD_REQUEST
-        self.reason_phrase = HttpReasonPhrases.BAD_REQUEST
     def __str__(self):
         return f'This body string is invalid w.r.t to the HTTP format: {self.request_string}'
    
-class PathNotFoundError(Exception):
+class UnexpectedBodyError(Exception):
+    def __init__(self, body_string):
+        super().__init__(HttpStatus.UNPROCESSABLE_ENTITY.code, HttpStatus.UNPROCESSABLE_ENTITY.phrase)
+        self.body_string = body_string
+    def __str__(self):
+        return f'This body string cannot be loaded into the expected entity: {self.body_string}'
+
+class PathNotFoundError(ExternalError):
     def __init__(self, path_string):
+        super().__init__(HttpStatus.NOT_FOUND.code, HttpStatus.NOT_FOUND.phrase)
         self.path_string = path_string
-        self.code = HttpStatusCodes.NOT_FOUND
-        self.reason_phrase = HttpReasonPhrases.NOT_FOUND
     def __str__(self):
         return f'The given path was not found: {self.path_string}'
 
@@ -32,9 +47,8 @@ class PathAlreadyExistsError(Exception):
     def __str__(self):
         return f'The path trying to be reigstered already exists: {self.path}'
 
-class ArgumentCountMismatchError(Exception):
-    def __init__(self, path_args: int, func_args: int):
-        self.path_args = path_args
-        self.func_args = func_args
+class MissingPathParameterError(Exception):
+    def __init__(self, path_params: set[str]):
+        self.path_params = path_params
     def __str__(self):
-        return f'The number of arguments provided in the path string {self.path_args} is different from the number provided in the function {self.func_args}'
+        return f'The given function does not take these path parameters as arguments - {self.path_params}'

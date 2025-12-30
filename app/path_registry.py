@@ -3,56 +3,32 @@ import inspect
 
 from typing import Optional
 
+from app.exceptions import PathAlreadyExistsError, MissingPathParameterError, PathNotFoundError
 from app.http_response import HttpResponse
-from app.http_constants import HttpStatusCodes, HttpReasonPhrases
-from app.exceptions import PathAlreadyExistsError, ArgumentCountMismatchError, PathNotFoundError
 
 class PathRegistry:
     registered_paths = {}
     path_var_regex = re.compile('{([a-zA-Z_][a-zA-Z0-9_]*)}')
     PATH_PARAM_NODE_NAME = 'var'
 
-    def register(self, path_string: str, method: str, override: Optional[bool] = False):
-        '''
-        Decorator function for the internal add_route method to allow patterns like
-        @pr.register('/register/person/{id}', 'GET')
-        def echo(id: str):
-            return id
-        '''
-        def decorator(func):
-            self.add_route(
-                path_string=path_string,
-                method=method,
-                func=func,
-                override=override
-            )
-            return func
-        return decorator
     
-    def evaluate(self, path_string: str, method: str, media_type: str = None):
+    def match(self, path_string: str, method: str):
         node_list = path_string.split('/')
         curr_node = self.registered_paths[method]
-        func_args = {}
+        path_params = {}
 
         for node_string in node_list:
             if node_string in curr_node.keys():
                 curr_node = curr_node[node_string]
             elif self.PATH_PARAM_NODE_NAME in curr_node.keys():
                 curr_node = curr_node[self.PATH_PARAM_NODE_NAME]
-                func_args[curr_node['param_name']]=node_string
+                path_params[curr_node['param_name']]=node_string
             else:
                 raise PathNotFoundError(path_string)
         
         func = curr_node['function']
         if func is not None:
-            result = func(**func_args)
-            if not media_type:
-                media_type = self.infer_media_type(result)
-            if result:
-                response = HttpResponse(status_code=HttpStatusCodes.OK, reason_phrase=HttpReasonPhrases.OK, response_body=result, media_type=media_type)
-            else:
-                response = HttpResponse(status_code=HttpStatusCodes.OK, reason_phrase=HttpReasonPhrases.OK)
-            return response
+            return func, path_params
         else:
             raise PathNotFoundError(path_string)
         
@@ -63,8 +39,7 @@ class PathRegistry:
         if not method in self.registered_paths.keys():
             self.registered_paths[method] = {} # Default for / path
 
-        n_params = 0 # number of path parameters sent in the path
-        function_params = len(inspect.signature(func).parameters) # number of parameters in the function passed
+        function_params = inspect.signature(func).parameters
 
         prev_node = self.registered_paths[method]
         node_list = path_string.split('/')
@@ -77,8 +52,9 @@ class PathRegistry:
                     curr_node = {'function': None}
                     prev_node[node_string] = curr_node
                 else:
-                    n_params += 1
                     param_name = path_param_name[1:-1] # retaining the name of the path variable while excluding the curly braces { param }
+                    if param_name not in function_params:
+                        raise MissingPathParameterError(param_name)
                     curr_node = {'function': None, 'param_name': param_name}
                     prev_node[self.PATH_PARAM_NODE_NAME] = curr_node
                 prev_node = curr_node
@@ -89,8 +65,6 @@ class PathRegistry:
         #Check if path has been previously registered by checking if its method is None or not
         if prev_node['function'] is not None and not override:
             raise PathAlreadyExistsError(path_string)
-        elif n_params != function_params:
-            raise ArgumentCountMismatchError(n_params, function_params)
         #If there are no problems then proceed to set the function to the one user gave
         prev_node['function'] = func
 

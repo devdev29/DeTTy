@@ -1,3 +1,6 @@
+from typing import NamedTuple
+
+
 class HttpMethods:
     GET = 'GET'
     HEAD = 'HEAD'
@@ -6,21 +9,33 @@ class HttpMethods:
     DELETE = 'DELETE'
     OPTIONS = 'OPTIONS'
 
-# TODO: Please find a way to make HttpStatusCodes and HttpReasonPhrases a single class, this is horrible :')))))
-class HttpStatusCodes:
-    OK = '200'
-    CREATED = '201'
-    BAD_REQUEST = '400'
-    UNAUTHORIZED = '401'
-    NOT_FOUND = '404'
-    METHOD_NOT_ALLOWED = '405'
-    INTERNAL_SERVER_ERROR = '500'
 
-class HttpReasonPhrases:
-    OK = 'OK'
-    CREATED = 'Created'
-    BAD_REQUEST = 'Bad Request'
-    UNAUTHORIZED = 'Unauthorized'
-    NOT_FOUND = 'Not Found'
-    METHOD_NOT_ALLOWED = 'Method Not Allowed'
-    INTERNAL_SERVER_ERROR = 'Internal Server Error'
+class HttpStatusValue(NamedTuple):
+    """Represents an HTTP status with code and reason phrase."""
+    code: str
+    phrase: str
+
+
+class HttpStatus:
+    """
+    HTTP status codes with their reason phrases.
+    
+    Usage:
+        HttpStatus.OK.code          # '200'
+        HttpStatus.OK.phrase        # 'OK'
+        HttpStatus.NOT_FOUND.code   # '404'
+        HttpStatus.NOT_FOUND.phrase # 'Not Found'
+    """
+    # 2xx Success
+    OK = HttpStatusValue('200', 'OK')
+    CREATED = HttpStatusValue('201', 'Created')
+    
+    # 4xx Client Error
+    BAD_REQUEST = HttpStatusValue('400', 'Bad Request')
+    UNAUTHORIZED = HttpStatusValue('401', 'Unauthorized')
+    NOT_FOUND = HttpStatusValue('404', 'Not Found')
+    METHOD_NOT_ALLOWED = HttpStatusValue('405', 'Method Not Allowed')
+    UNPROCESSABLE_ENTITY = HttpStatusValue('422', 'Unprocessable Entity')
+    
+    # 5xx Server Error
+    INTERNAL_SERVER_ERROR = HttpStatusValue('500', 'Internal Server Error')
