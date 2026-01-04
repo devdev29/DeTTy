@@ -35,7 +35,7 @@ class HttpResponse:
     def compress_body(self, compression_schemes: list[str]):
         compression_schemes = [scheme for scheme in compression_schemes if scheme in SUPPORTED_CONTENT_ENCODINGS]
         if self.response_body is not None and compression_schemes:
-            self.response_body = gzip.compress(self.response_body.encode('ASCII')).decode('ASCII') #any supported scheme will do, so we can just use gzip :P
+            self.response_body = gzip.compress(self.response_body.encode('ASCII')).hex() #any supported scheme will do, so we can just use gzip :P
             self.response_headers['Content-Encoding'] = 'gzip'
 
     def __repr__(self):
