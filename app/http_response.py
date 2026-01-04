@@ -1,4 +1,7 @@
 from dataclasses import dataclass,field
+from typing import Any, Union
+
+from app.http_constants import ContentEncoding
 
 @dataclass
 class HttpResponse:
@@ -7,7 +10,7 @@ class HttpResponse:
     http_version: str = 'HTTP/1.1'
     response_headers: dict[str, str] = field(default_factory=dict)
     media_type: str = 'text/plain'
-    response_body: str = ''
+    response_body: Union[str, Any] = ''
 
     def __str__(self):
         status_line = f'{self.http_version} {self.status_code} {self.reason_phrase}\r\n'
@@ -27,5 +30,10 @@ class HttpResponse:
             http_response_string+=f'{self.response_body}\r\n'
         return http_response_string
     
+    def compress_body(self, compression_type: ContentEncoding = ContentEncoding.GZIP):
+        if self.response_body and compression_type in ContentEncoding.__members__.values():
+            # self.response_body = compress(self.response_body.encode('ASCII'))
+            self.response_headers['Content-Encoding'] = compression_type.value
+
     def __repr__(self):
         return str(self)

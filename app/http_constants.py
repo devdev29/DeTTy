@@ -1,4 +1,5 @@
 from typing import NamedTuple
+from enum import Enum
 
 
 class HttpMethods:
@@ -51,3 +52,8 @@ DEFAULT_METHOD_STATUS: dict[str, HttpStatusValue] = {
     HttpMethods.DELETE: HttpStatus.NO_CONTENT,
     HttpMethods.OPTIONS: HttpStatus.OK,
 }
+
+
+class ContentEncoding(Enum):
+    """Supported content encoding schemes."""
+    GZIP = 'gzip'
