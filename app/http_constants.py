@@ -29,6 +29,7 @@ class HttpStatus:
     # 2xx Success
     OK = HttpStatusValue('200', 'OK')
     CREATED = HttpStatusValue('201', 'Created')
+    NO_CONTENT = HttpStatusValue('204', 'No Content')
     
     # 4xx Client Error
     BAD_REQUEST = HttpStatusValue('400', 'Bad Request')
@@ -39,3 +40,14 @@ class HttpStatus:
     
     # 5xx Server Error
     INTERNAL_SERVER_ERROR = HttpStatusValue('500', 'Internal Server Error')
+
+
+# Default HTTP status for each method
+DEFAULT_METHOD_STATUS: dict[str, HttpStatusValue] = {
+    HttpMethods.GET: HttpStatus.OK,
+    HttpMethods.HEAD: HttpStatus.OK,
+    HttpMethods.POST: HttpStatus.CREATED,
+    HttpMethods.PUT: HttpStatus.OK,
+    HttpMethods.DELETE: HttpStatus.NO_CONTENT,
+    HttpMethods.OPTIONS: HttpStatus.OK,
+}

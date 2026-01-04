@@ -6,6 +6,7 @@ from typing import Annotated, Optional, Callable, get_origin, get_args
 from pydantic import BaseModel
 
 from app.exceptions import PathAlreadyExistsError, MissingPathParameterError, PathNotFoundError
+from app.http_request import HttpRequest
 from app.http_response import HttpResponse
 from app.models import FunctionParameters, PathParameter, QueryParameter, HeaderParameter, BodyParameter
 
@@ -87,6 +88,7 @@ class PathRegistry:
                 base_type = args[0]
                 if len(args) > 1:
                     param_class = args[1]
+            print(base_type)
             if not param_class:
                 if param_name in path_params_list:
                     param_class = PathParameter(field_name=param_name, annotation=base_type)
@@ -94,6 +96,8 @@ class PathRegistry:
                 elif isinstance(base_type, (BaseModel, list, dict, tuple)):
                     param_class = BodyParameter(field_name=param_name, annotation=base_type, default_value=param.default)
                     field_info.body_arguments[param_name] = param_class
+                elif base_type is HttpResponse:
+                    field_info.response_argument = param_name
                 else:
                     param_class = QueryParameter(field_name=param_name, annotation=base_type, default_value=param.default)
                     field_info.query_arguments[param_name] = param_class

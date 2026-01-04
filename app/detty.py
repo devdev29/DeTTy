@@ -1,4 +1,3 @@
-from concurrent.futures import ThreadPoolExecutor
 import socket
 import os
 import traceback
@@ -6,13 +5,14 @@ import traceback
 import click
 
 from typing import Any
+from concurrent.futures import ThreadPoolExecutor
 
 from pydantic import BaseModel
 
 from app.path_registry import PathRegistry
 from app.http_request import HttpRequest
 from app.http_response import HttpResponse
-from app.http_constants import HttpStatus
+from app.http_constants import HttpStatus, DEFAULT_METHOD_STATUS
 from app.exceptions import ExternalError
 from app.models import FunctionParameters
 
@@ -60,23 +60,27 @@ class DeTTy:
         else:
             return HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR.code, HttpStatus.INTERNAL_SERVER_ERROR.phrase) 
 
+    def get_default_http_response(self, request_method: str) -> HttpResponse:
+        status = DEFAULT_METHOD_STATUS.get(request_method, HttpStatus.METHOD_NOT_ALLOWED)
+        return HttpResponse(status_code=status.code, reason_phrase=status.phrase)
+
     def handle_connection(self, connection: socket.socket) -> None:
         """Handle a single connection - can be run in a thread."""
         try:
             incoming_request = connection.recv(1024).decode()
             request = HttpRequest(incoming_request)
+            response = self.get_default_http_response(request.method)
             func, field_info, path_params = self.path_registry.match(request.resource, request.method)
-            values = self.solve_values(request, field_info, path_params)
+            values = self.solve_values(request, field_info, path_params, response)
             print(path_params)
             solved = func(**values)
             response_body = solved if solved is not None else ''
-            success_resp = HttpResponse(
-                status_code=HttpStatus.OK.code,
-                reason_phrase=HttpStatus.OK.phrase,
-                response_body=response_body,
-                media_type=self._infer_media_type(response_body)
-            )
-            connection.send(str(success_resp).encode('ASCII'))
+            if isinstance(solved, HttpResponse):
+                response = solved
+            else:
+                response.response_body = response_body
+                response.media_type = self._infer_media_type(response_body)
+            connection.send(str(response).encode('ASCII'))
         except Exception as e:
             traceback.print_exc()
             error_resp = str(self.get_error_response(e)).encode('ASCII')
@@ -84,7 +88,7 @@ class DeTTy:
         finally:
             connection.close()
 
-    def solve_values(self, request: HttpRequest, field_info: FunctionParameters, request_path_params: dict[str, str]) -> dict[str, Any]:
+    def solve_values(self, request: HttpRequest, field_info: FunctionParameters, request_path_params: dict[str, str], response_object: HttpResponse) -> dict[str, Any]:
         values = {}
         query_params = request.extract_query_parameters()
 
@@ -109,6 +113,9 @@ class DeTTy:
         for param_name, param in field_info.body_arguments.items():
             values[param_name] = param.validate_value(request.request_body)
         
+        if field_info.response_argument:
+            values[field_info.response_argument] = response_object
+        
         return values
 
     def _infer_media_type(self, response_body):
@@ -125,7 +132,7 @@ class DeTTy:
         click.clear()
         click.echo("-------------STARTING UP-----------------")
         click.echo(click.style('''
-        /$$$$$$$         /$$$$$$$$ /$$$$$$$$       
+         /$$$$$$$         /$$$$$$$$ /$$$$$$$$       
         | $$__  $$       |__  $$__/|__  $$__/       
         | $$  \ $$  /$$$$$$ | $$      | $$ /$$   /$$
         | $$  | $$ /$$__  $$| $$      | $$| $$  | $$

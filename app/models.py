@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 
 from pydantic import TypeAdapter, ValidationError, type_adapter
 
+from app.http_request import HttpRequest
+
 allowed_text_types = [str, int, float, bool]
 
 # Use inspect.Parameter.empty as the sentinel
@@ -87,6 +89,7 @@ class FunctionParameters:
     query_arguments: dict[str, QueryParameter] = field(default_factory=dict[str, QueryParameter])
     header_arguments: dict[str, HeaderParameter] = field(default_factory=dict[str, HeaderParameter])
     body_arguments: dict[str, BodyParameter] = field(default_factory=dict[str, BodyParameter])
+    response_argument: str = ''
     _argument_category: dict[str, AnnotatedParameter] = field(default_factory=dict[str, AnnotatedParameter])
 
     def __post_init__(self):
