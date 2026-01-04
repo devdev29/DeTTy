@@ -52,7 +52,6 @@ class PathRegistry:
             path_param_name = node_string
             node_string = self.PATH_PARAM_NODE_NAME if self.path_var_regex.match(node_string) else node_string
             if node_string is self.PATH_PARAM_NODE_NAME:
-                print("added path_param "+path_param_name)
                 path_params.append(path_param_name[1:-1])
             if not node_string in prev_node.keys():
                 #Case when the path string is new
@@ -80,7 +79,6 @@ class PathRegistry:
 
     def extract_field_info(self, func: Callable, path_params_list: list[str]) -> FunctionParameters:
         field_info = FunctionParameters()
-        print("list passed "+str(path_params_list))
         for param_name, param in inspect.signature(func).parameters.items():
             base_type = param.annotation
             param_class = None

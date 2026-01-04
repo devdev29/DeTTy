@@ -1,7 +1,10 @@
+from concurrent.futures import ThreadPoolExecutor
 import socket
 import os
-
 import traceback
+
+import click
+
 from typing import Any
 
 from pydantic import BaseModel
@@ -57,57 +60,54 @@ class DeTTy:
         else:
             return HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR.code, HttpStatus.INTERNAL_SERVER_ERROR.phrase) 
 
-    def handle_request(self, server_socket: socket.socket) -> HttpResponse:
-        connection = server_socket.accept()[0]
-        incoming_request = connection.recv(1024).decode()
-        request = HttpRequest(incoming_request)
+    def handle_connection(self, connection: socket.socket) -> None:
+        """Handle a single connection - can be run in a thread."""
         try:
+            incoming_request = connection.recv(1024).decode()
+            request = HttpRequest(incoming_request)
             func, field_info, path_params = self.path_registry.match(request.resource, request.method)
             values = self.solve_values(request, field_info, path_params)
             print(path_params)
             solved = func(**values)
-            response_body = solved if solved is not None else ''#add logic to convert objects to json strings
-            success_resp= HttpResponse(status_code=HttpStatus.OK.code, reason_phrase=HttpStatus.OK.phrase, response_body=response_body, media_type=self._infer_media_type(response_body))# Add request evaluation code here
+            response_body = solved if solved is not None else ''
+            success_resp = HttpResponse(
+                status_code=HttpStatus.OK.code,
+                reason_phrase=HttpStatus.OK.phrase,
+                response_body=response_body,
+                media_type=self._infer_media_type(response_body)
+            )
             connection.send(str(success_resp).encode('ASCII'))
         except Exception as e:
-            traceback.print_exc() #TODO: replace with proper error logging later
+            traceback.print_exc()
             error_resp = str(self.get_error_response(e)).encode('ASCII')
             connection.send(error_resp)
         finally:
             connection.close()
-        
-    def run(self):
-        server = self.create_server(address=("127.0.0.1", 4221), reuse_port=False)
-        self.handle_request(server)
-    
+
     def solve_values(self, request: HttpRequest, field_info: FunctionParameters, request_path_params: dict[str, str]) -> dict[str, Any]:
         values = {}
-        request_body = request.request_body
-        request_query_params = request.extract_query_parameters()
-        request_headers = request.request_headers
+        query_params = request.extract_query_parameters()
 
+        def resolve_param(param, source: dict) -> Any:
+            """Resolve a parameter value from a source dict, falling back to default."""
+            if param.request_key in source:
+                return param.validate_value(source[param.request_key])
+            return param.default_value
+
+        # Path params are always required (no defaults)
         for param_name, param in field_info.path_arguments.items():
-            raw_path_value = request_path_params.get(param_name)
-            path_value = param.validate_value(raw_path_value)
-            values[param_name] = path_value
+            values[param_name] = param.validate_value(request_path_params.get(param_name))
+
+        # Query and header params use the same resolution logic
         for param_name, param in field_info.query_arguments.items():
-            if param_name in request_query_params:
-                raw_query_value = request_query_params.get(param_name)
-                query_value = param.validate_value(raw_query_value)
-                values[param_name] = query_value
-            else:
-                #just populate the default value
-                values[param_name] = param.default_value
-        for param_name, header in field_info.header_arguments.items():
-            if header.header_name in request_headers:
-                raw_header_value = request_headers.get(header.header_name)
-                header_value = header.validate_value(raw_header_value)
-                values[param_name] = header_value
-            else:
-                values[param_name] = param.default_value
-        for param_name, body in field_info.body_arguments.items():
-            body_value = body.validate_value(request_body)
-            values[param_name] = body_value
+            values[param_name] = resolve_param(param, query_params)
+
+        for param_name, param in field_info.header_arguments.items():
+            values[param_name] = resolve_param(param, request.request_headers)
+
+        # Body params validate the entire request body
+        for param_name, param in field_info.body_arguments.items():
+            values[param_name] = param.validate_value(request.request_body)
         
         return values
 
@@ -118,3 +118,40 @@ class DeTTy:
             return 'application/json'
         elif isinstance(response_body, bytes):
             return 'application/octet-stream'
+
+    def run(self, multithreaded: bool = False, max_workers: int = 5):
+        server = self.create_server(address=("127.0.0.1", 4221), reuse_port=False)
+        server.settimeout(1.0)  # Allow checking for KeyboardInterrupt
+        click.clear()
+        click.echo("-------------STARTING UP-----------------")
+        click.echo(click.style('''
+        /$$$$$$$         /$$$$$$$$ /$$$$$$$$       
+        | $$__  $$       |__  $$__/|__  $$__/       
+        | $$  \ $$  /$$$$$$ | $$      | $$ /$$   /$$
+        | $$  | $$ /$$__  $$| $$      | $$| $$  | $$
+        | $$  | $$| $$$$$$$$| $$      | $$| $$  | $$
+        | $$  | $$| $$_____/| $$      | $$| $$  | $$
+        | $$$$$$$/|  $$$$$$$| $$      | $$|  $$$$$$$
+        |_______/  \_______/|__/      |__/ \____  $$
+                                        /$$  | $$
+                                        |  $$$$$$/
+                                        \______/ 
+        ''', fg='yellow'))
+        
+        executor = ThreadPoolExecutor(max_workers=max_workers) if multithreaded else None
+        try:
+            while True:
+                try:
+                    connection, _= server.accept()
+                    if multithreaded:
+                        executor.submit(self.handle_connection, connection)
+                    else:
+                        self.handle_connection(connection)
+                except socket.timeout:
+                    continue  # Check for KeyboardInterrupt
+        except KeyboardInterrupt:
+            click.echo(click.style('\nSHUTTING DOWN: User keyboard interrupt detected', fg='red'))
+        finally:
+            if executor:
+                executor.shutdown(wait=False)
+            server.close()

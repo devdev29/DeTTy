@@ -17,4 +17,4 @@ def get_user_agent(user_agent: Annotated[str, HeaderParameter(header_name='User-
     return user_agent
 
 if __name__ == "__main__":
-    app.run() 
+    app.run(multithreaded=True) 

@@ -35,6 +35,15 @@ class AnnotatedParameter:
             return TypeAdapter(self.annotation)
         raise ValueError("cannot create type adapter without annotation")
 
+    @property
+    def request_key(self) -> str:
+        """The key used to look up this parameter's value in request data."""
+        return self.field_name
+
+    @property
+    def has_default(self) -> bool:
+        return self.default_value is not EMPTY_DEFAULT
+
     def validate_value(self, value: Any) -> Any:
         try:
             return self._type_adapter.validate_python(value)
@@ -60,6 +69,11 @@ class HeaderParameter(AnnotatedParameter):
     def __post_init__(self):
         super().__post_init__()
         self.category = ParamCategory.HEADER
+
+    @property
+    def request_key(self) -> str:
+        """Headers use header_name as the lookup key."""
+        return self.header_name
 @dataclass
 class BodyParameter(AnnotatedParameter):
     def __post_init__(self):
