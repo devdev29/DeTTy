@@ -53,7 +53,4 @@ DEFAULT_METHOD_STATUS: dict[str, HttpStatusValue] = {
     HttpMethods.OPTIONS: HttpStatus.OK,
 }
 
-
-class ContentEncoding(Enum):
-    """Supported content encoding schemes."""
-    GZIP = 'gzip'
+SUPPORTED_CONTENT_ENCODINGS: set[str] = set(['gzip', 'deflate', 'br'])

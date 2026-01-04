@@ -1,7 +1,7 @@
 from dataclasses import dataclass,field
 from typing import Any, Union
 
-from app.http_constants import ContentEncoding
+from app.http_constants import SUPPORTED_CONTENT_ENCODINGS
 
 @dataclass
 class HttpResponse:
@@ -31,7 +31,7 @@ class HttpResponse:
         return http_response_string
     
     def compress_body(self, compression_type: str = 'gzip'):
-        if self.response_body is not None and compression_type in ContentEncoding.__members__.values():
+        if self.response_body is not None and compression_type in SUPPORTED_CONTENT_ENCODINGS:
             # self.response_body = compress(self.response_body.encode('ASCII'))
             self.response_headers['Content-Encoding'] = compression_type
 
