@@ -9,6 +9,7 @@ name = "pypi"
 pyparsing = "~=3.0"
 lark = "~=1.1"
 pydantic = "*"
+orjson = "*"
 
 [dev-packages]
 
