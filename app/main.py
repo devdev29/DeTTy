@@ -25,7 +25,7 @@ def get_user_agent(user_agent: Annotated[str, HeaderParameter(header_name='User-
 
 @app.register('/files/{filename}', 'GET')
 def get_file(filename: str, response: HttpResponse):
-    dir_name = '/tmp/'
+    dir_name = '/tmp/data/codecrafters.io/http-server-tester/'
     file_path = os.path.join(dir_name, filename)
     print(file_path)
     if not os.path.exists(file_path):
