@@ -30,8 +30,10 @@ class HttpResponse:
             http_response_string+=f'{self.response_body}\r\n'
         return http_response_string
     
-    def compress_body(self, compression_type: str = 'gzip'):
-        if self.response_body is not None and compression_type in SUPPORTED_CONTENT_ENCODINGS:
+    def compress_body(self, compression_schemes: list[str]):
+        compression_schemes = [scheme for scheme in compression_schemes if scheme in SUPPORTED_CONTENT_ENCODINGS]
+        compression_type = compression_schemes[0] #any supported scheme will do
+        if self.response_body is not None:
             # self.response_body = compress(self.response_body.encode('ASCII'))
             self.response_headers['Content-Encoding'] = compression_type
 

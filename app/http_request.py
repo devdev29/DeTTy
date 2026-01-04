@@ -47,6 +47,13 @@ class HttpRequest:
                     raise InvalidBodyError('Invalid HTTP request format')
                 query_parameter_values.update({query_parameter.split('=')[0], query_parameter.split('=')[1]})
         return query_parameter_values
+    
+    def extract_accept_encodings(self):
+        accept_encoding = self.request_headers.get('Accept-Encoding', '')
+        client_encodings = [
+        enc.split(';')[0].strip() 
+        for enc in accept_encoding.split(',')]
+        return client_encodings
 
     def get_request_body_as_object(self, mapper:Type[Any]) -> Any:
         arg_dict = orjson.loads(self.request_body)
