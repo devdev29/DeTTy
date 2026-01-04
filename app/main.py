@@ -5,7 +5,7 @@ import click
 from typing import Annotated
 
 from app.detty import DeTTy
-from app.models import HeaderParameter
+from app.models import HeaderParameter, BodyParameter
 from app.http_response import HttpResponse
 from app.http_constants import HttpStatus
 
@@ -36,6 +36,14 @@ def get_file(filename: str, response: HttpResponse):
         response.response_body = file.read().decode('ASCII')
         response.media_type = 'application/octet-stream'
     return response
+
+@app.register('/files/{filename}','POST')
+def create_file(filename: str, file_body: Annotated[str, BodyParameter()]):
+    dir_name = '/tmp/data/codecrafters.io/http-server-tester/'
+    file_path = os.path.join(dir_name, filename)
+    print(file_path)
+    with open(file_path, 'wb') as file:
+        file.write(file_body.encode('ASCII'))
 
 @click.command()
 @click.option('--directory', type=click.Path(exists=True), default='/tmp/')
