@@ -3,8 +3,6 @@ import os
 
 from typing import Any
 
-import orjson
-
 from app.path_registry import PathRegistry
 from app.http_request import HttpRequest
 from app.http_response import HttpResponse
