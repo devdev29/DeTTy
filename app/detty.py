@@ -66,7 +66,7 @@ class DeTTy:
             solved = func(**values)
             response_body = solved #add logic to convert objects to json strings
             success_resp= HttpResponse(status_code=HttpStatus.OK.code, reason_phrase=HttpStatus.OK.phrase, response_body=response_body, media_type=self._infer_media_type(response_body))# Add request evaluation code here
-            connection.send(success_resp)
+            connection.send(str(success_resp).encode('ASCII'))
         except Exception as e:
             print(e.with_traceback()) #TODO: replace with proper error logging later
             error_resp = str(self.get_error_response(e)).encode('ASCII')
