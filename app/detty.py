@@ -63,8 +63,9 @@ class DeTTy:
         try:
             func, field_info, path_params = self.path_registry.match(request.resource, request.method)
             values = self.solve_values(request, field_info, path_params)
+            print(path_params)
             solved = func(**values)
-            response_body = solved #add logic to convert objects to json strings
+            response_body = solved if solved is not None else ''#add logic to convert objects to json strings
             success_resp= HttpResponse(status_code=HttpStatus.OK.code, reason_phrase=HttpStatus.OK.phrase, response_body=response_body, media_type=self._infer_media_type(response_body))# Add request evaluation code here
             connection.send(str(success_resp).encode('ASCII'))
         except Exception as e:
@@ -80,7 +81,6 @@ class DeTTy:
     
     def solve_values(self, request: HttpRequest, field_info: FunctionParameters, request_path_params: dict[str, str]) -> dict[str, Any]:
         values = {}
-        print(request)
         request_body = request.request_body
         request_query_params = request.extract_query_parameters()
         request_headers = request.request_headers

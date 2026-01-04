@@ -45,7 +45,7 @@ class PathParameter(AnnotatedParameter):
     def __post_init__(self):
         super().__post_init__()
         self.category = ParamCategory.PATH
-        assert self.default_value is None, "Path arguments cannot have a default value"
+        assert self.default_value is None or self.default_value is EMPTY_DEFAULT, "Path arguments cannot have a default value"
         assert self.annotation in allowed_text_types, "Path arguments must be a text type"
 @dataclass
 class QueryParameter(AnnotatedParameter):
