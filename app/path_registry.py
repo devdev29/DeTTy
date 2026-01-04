@@ -105,11 +105,3 @@ class PathRegistry:
                 field_info.argument_category(param_class.category)[param_name] = param_class
             field_info.arguments.append(param_class)
         return field_info
-
-    def infer_media_type(self, response_body):
-        if isinstance(response_body, str):
-            return 'text/plain'
-        elif isinstance(response_body, (dict, list)):
-            return 'application/json'
-        elif isinstance(response_body, bytes):
-            return 'application/octet-stream'

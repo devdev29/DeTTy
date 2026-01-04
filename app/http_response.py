@@ -7,7 +7,7 @@ class HttpResponse:
     reason_phrase: str
     http_version: str = 'HTTP/1.1'
     response_headers: dict[str, str] = field(default_factory=dict)
-    media_type: str = 'text/plain; charset=utf-8'
+    media_type: str = 'text/plain'
     response_body: str = ''
 
     def __str__(self):

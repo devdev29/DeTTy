@@ -3,6 +3,8 @@ import os
 
 from typing import Any
 
+from pydantic import BaseModel
+
 from app.path_registry import PathRegistry
 from app.http_request import HttpRequest
 from app.http_response import HttpResponse
@@ -63,7 +65,7 @@ class DeTTy:
             values = self.solve_values(request, field_info, path_params)
             solved = func(**values)
             response_body = solved #add logic to convert objects to json strings
-            success_resp= str(HttpResponse(status_code=HttpStatus.OK.code, reason_phrase=HttpStatus.OK.phrase, response_body=response_body)).encode('ASCII')# Add request evaluation code here
+            success_resp= HttpResponse(status_code=HttpStatus.OK.code, reason_phrase=HttpStatus.OK.phrase, response_body=response_body, media_type=self._infer_media_type(response_body))# Add request evaluation code here
             connection.send(success_resp)
         except Exception as e:
             print(e.with_traceback()) #TODO: replace with proper error logging later
@@ -107,3 +109,11 @@ class DeTTy:
             values[param_name] = body_value
         
         return values
+
+    def _infer_media_type(self, response_body):
+        if isinstance(response_body, str):
+            return 'text/plain'
+        elif isinstance(response_body, (dict, list, BaseModel)):
+            return 'application/json'
+        elif isinstance(response_body, bytes):
+            return 'application/octet-stream'
