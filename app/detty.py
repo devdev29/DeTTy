@@ -81,11 +81,10 @@ class DeTTy:
                 response.response_body = response_body
                 response.media_type = self._infer_media_type(response_body)
             response.compress_body(request.extract_accept_encodings())
-            connection.send(str(response).encode('ASCII'))
+            connection.send(bytes(response))
         except Exception as e:
             traceback.print_exc()
-            error_resp = str(self.get_error_response(e)).encode('ASCII')
-            connection.send(error_resp)
+            connection.send(bytes(self.get_error_response(e)))
         finally:
             connection.close()
 
