@@ -32,7 +32,7 @@ class HttpResponse:
             headers += f'{header}: {value}\r\n'
         headers += '\r\n'
         
-        return headers.encode('ASCII') + body_bytes + b'\r\n'
+        return headers.encode('ASCII') + body_bytes
 
     def __str__(self):
         status_line = f'{self.http_version} {self.status_code} {self.reason_phrase}\r\n'
