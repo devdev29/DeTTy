@@ -85,8 +85,6 @@ class DeTTy:
         except Exception as e:
             traceback.print_exc()
             connection.send(bytes(self.get_error_response(e)))
-        finally:
-            connection.close()
 
     def solve_values(self, request: HttpRequest, field_info: FunctionParameters, request_path_params: dict[str, str], response_object: HttpResponse) -> dict[str, Any]:
         values = {}
