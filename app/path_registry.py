@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from app.exceptions import PathAlreadyExistsError, MissingPathParameterError, PathNotFoundError
 from app.http_request import HttpRequest
 from app.http_response import HttpResponse
-from app.models import FunctionParameters, PathParameter, QueryParameter, HeaderParameter, BodyParameter
+from app.models import FunctionParameters, Path, Query, Header, Body
 
 class PathRegistry:
     registered_paths = {}
@@ -91,15 +91,15 @@ class PathRegistry:
             print(base_type)
             if not param_class:
                 if param_name in path_params_list:
-                    param_class = PathParameter(field_name=param_name, annotation=base_type)
+                    param_class = Path(field_name=param_name, annotation=base_type)
                     field_info.path_arguments[param_name] = param_class
                 elif isinstance(base_type, (BaseModel, list, dict, tuple)):
-                    param_class = BodyParameter(field_name=param_name, annotation=base_type, default_value=param.default)
+                    param_class = Body(field_name=param_name, annotation=base_type, default_value=param.default)
                     field_info.body_arguments[param_name] = param_class
                 elif base_type is HttpResponse:
                     field_info.response_argument = param_name
                 else:
-                    param_class = QueryParameter(field_name=param_name, annotation=base_type, default_value=param.default)
+                    param_class = Query(field_name=param_name, annotation=base_type, default_value=param.default)
                     field_info.query_arguments[param_name] = param_class
             else:
                 #User defined parameter class, defined inside Annotated

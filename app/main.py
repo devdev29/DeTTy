@@ -5,7 +5,7 @@ import click
 from typing import Annotated
 
 from app.detty import DeTTy
-from app.models import HeaderParameter, BodyParameter
+from app.models import Header, Body
 from app.http_response import HttpResponse
 from app.http_constants import HttpStatus
 
@@ -20,7 +20,7 @@ def echo(in_str: str):
     return in_str
 
 @app.register('/user-agent', 'GET')
-def get_user_agent(user_agent: Annotated[str, HeaderParameter(header_name='User-Agent')]):
+def get_user_agent(user_agent: Annotated[str, Header(header_name='User-Agent')]):
     return user_agent
 
 @app.register('/files/{filename}', 'GET')
@@ -38,7 +38,7 @@ def get_file(filename: str, response: HttpResponse):
     return response
 
 @app.register('/files/{filename}','POST')
-def create_file(filename: str, file_body: Annotated[str, BodyParameter()]):
+def create_file(filename: str, file_body: Annotated[str, Body()]):
     dir_name = '/tmp/data/codecrafters.io/http-server-tester/'
     file_path = os.path.join(dir_name, filename)
     print(file_path)

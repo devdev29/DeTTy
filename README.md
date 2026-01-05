@@ -88,14 +88,14 @@ curl http://localhost:4221/users/42/posts/7
 
 ### Header Parameters
 
-Access request headers using `Annotated` with `HeaderParameter`:
+Access request headers using `Annotated` with `Header`:
 
 ```python
 from typing import Annotated
-from app.models import HeaderParameter
+from app.models import Header
 
 @app.register('/user-agent', 'GET')
-def get_user_agent(ua: Annotated[str, HeaderParameter(header_name='User-Agent')]):
+def get_user_agent(ua: Annotated[str, Header(header_name='User-Agent')]):
     return ua
 ```
 
@@ -110,10 +110,10 @@ Handle POST request bodies:
 
 ```python
 from typing import Annotated
-from app.models import BodyParameter
+from app.models import Body
 
 @app.register('/files/{filename}', 'POST')
-def create_file(filename: str, content: Annotated[str, BodyParameter()]):
+def create_file(filename: str, content: Annotated[str, Body()]):
     with open(f'/tmp/{filename}', 'w') as f:
         f.write(content)
     # Returns 201 Created by default for POST

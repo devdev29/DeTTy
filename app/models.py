@@ -52,20 +52,20 @@ class AnnotatedParameter:
         except ValidationError as ve:
             raise ValidationError(f"Invalid value for argument {self.field_name}: {ve}")
 @dataclass
-class PathParameter(AnnotatedParameter):
+class Path(AnnotatedParameter):
     def __post_init__(self):
         super().__post_init__()
         self.category = ParamCategory.PATH
         assert self.default_value is None or self.default_value is EMPTY_DEFAULT, "Path arguments cannot have a default value"
         assert self.annotation in allowed_text_types, "Path arguments must be a text type"
 @dataclass
-class QueryParameter(AnnotatedParameter):
+class Query(AnnotatedParameter):
     def __post_init__(self):
         super().__post_init__()
         self.category = ParamCategory.QUERY
         assert self.annotation in allowed_text_types, "Query arguments must be a text type"
 @dataclass
-class HeaderParameter(AnnotatedParameter):
+class Header(AnnotatedParameter):
     header_name: str = field(default="", kw_only=True)  
 
     def __post_init__(self):
@@ -77,7 +77,7 @@ class HeaderParameter(AnnotatedParameter):
         """Headers use header_name as the lookup key."""
         return self.header_name
 @dataclass
-class BodyParameter(AnnotatedParameter):
+class Body(AnnotatedParameter):
     def __post_init__(self):
         super().__post_init__()
         self.category = ParamCategory.BODY
@@ -85,10 +85,10 @@ class BodyParameter(AnnotatedParameter):
 @dataclass
 class FunctionParameters:
     arguments: list[AnnotatedParameter] = field(default_factory = list[AnnotatedParameter])
-    path_arguments: dict[str, PathParameter] = field(default_factory=dict[str, PathParameter])
-    query_arguments: dict[str, QueryParameter] = field(default_factory=dict[str, QueryParameter])
-    header_arguments: dict[str, HeaderParameter] = field(default_factory=dict[str, HeaderParameter])
-    body_arguments: dict[str, BodyParameter] = field(default_factory=dict[str, BodyParameter])
+    path_arguments: dict[str, Path] = field(default_factory=dict[str, Path])
+    query_arguments: dict[str, Query] = field(default_factory=dict[str, Query])
+    header_arguments: dict[str, Header] = field(default_factory=dict[str, Header])
+    body_arguments: dict[str, Body] = field(default_factory=dict[str, Body])
     response_argument: str = ''
     _argument_category: dict[str, AnnotatedParameter] = field(default_factory=dict[str, AnnotatedParameter])
 
