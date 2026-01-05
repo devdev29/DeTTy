@@ -71,9 +71,9 @@ class DeTTy:
             while True:
                 try:
                     incoming_request = connection.recv(1024).decode()
-                    if not incoming_request:
-                        break
                     request = HttpRequest(incoming_request)
+                    if not incoming_request or request.request_headers['Connection'] is 'close':
+                        break
                     response = self.get_default_http_response(request.method)
                     func, field_info, path_params = self.path_registry.match(request.resource, request.method)
                     values = self.solve_values(request, field_info, path_params, response)
