@@ -5,7 +5,7 @@ import traceback
 import click
 
 from typing import Any
-from concurrent.futures import ThreadPoolExecutor
+import threading
 
 from pydantic import BaseModel
 
@@ -125,7 +125,7 @@ class DeTTy:
         elif isinstance(response_body, bytes):
             return 'application/octet-stream'
 
-    def run(self, multithreaded: bool = False, max_workers: int = 5):
+    def run(self, multithreaded: bool = False):
         server = self.create_server(address=("127.0.0.1", 4221), reuse_port=False)
         server.settimeout(1.0)  # Allow checking for KeyboardInterrupt
         click.clear()
@@ -144,13 +144,14 @@ class DeTTy:
                                         \______/ 
         ''', fg='yellow'))
         
-        executor = ThreadPoolExecutor(max_workers=max_workers) if multithreaded else None
         try:
             while True:
                 try:
                     connection, _= server.accept()
                     if multithreaded:
-                        executor.submit(self.handle_connection, connection)
+                        # executor.submit(self.handle_connection, connection)
+                        #trying a thread per connection instead of a thread pool
+                        threading.Thread(target=self.handle_connection, args=(connection,)).start()
                     else:
                         self.handle_connection(connection)
                 except socket.timeout:
@@ -158,6 +159,4 @@ class DeTTy:
         except KeyboardInterrupt:
             click.echo(click.style('\nSHUTTING DOWN: User keyboard interrupt detected', fg='red'))
         finally:
-            if executor:
-                executor.shutdown(wait=False)
             server.close()
