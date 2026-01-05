@@ -74,9 +74,10 @@ class DeTTy:
                     if not incoming_request:
                         break
                     request = HttpRequest(incoming_request)
-                    if request.request_headers.get('Connection', '') is 'close':
-                        break
                     response = self.get_default_http_response(request.method)
+                    if request.request_headers.get('Connection', '') is 'close':
+                        response.response_headers['Connection'] = 'close'
+                        break
                     func, field_info, path_params = self.path_registry.match(request.resource, request.method)
                     values = self.solve_values(request, field_info, path_params, response)
                     print(path_params)
