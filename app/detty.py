@@ -66,26 +66,29 @@ class DeTTy:
 
     def handle_connection(self, connection: socket.socket) -> None:
         """Handle a single connection - can be run in a thread."""
-        try:
-            incoming_request = connection.recv(1024).decode()
-            request = HttpRequest(incoming_request)
-            response = self.get_default_http_response(request.method)
-            func, field_info, path_params = self.path_registry.match(request.resource, request.method)
-            values = self.solve_values(request, field_info, path_params, response)
-            print(path_params)
-            solved = func(**values)
-            response_body = solved if solved is not None else ''
-            if isinstance(solved, HttpResponse):
-                response = solved
-            else:
-                response.response_body = response_body
-                response.media_type = self._infer_media_type(response_body)
-            response.compress_body(request.extract_accept_encodings())
-            print(response)
-            connection.send(bytes(response))
-        except Exception as e:
-            traceback.print_exc()
-            connection.send(bytes(self.get_error_response(e)))
+        while True:
+            try:
+                incoming_request = connection.recv(1024).decode()
+                if not incoming_request:
+                    break
+                request = HttpRequest(incoming_request)
+                response = self.get_default_http_response(request.method)
+                func, field_info, path_params = self.path_registry.match(request.resource, request.method)
+                values = self.solve_values(request, field_info, path_params, response)
+                print(path_params)
+                solved = func(**values)
+                response_body = solved if solved is not None else ''
+                if isinstance(solved, HttpResponse):
+                    response = solved
+                else:
+                    response.response_body = response_body
+                    response.media_type = self._infer_media_type(response_body)
+                response.compress_body(request.extract_accept_encodings())
+                print(response)
+                connection.send(bytes(response))
+            except Exception as e:
+                traceback.print_exc()
+                connection.send(bytes(self.get_error_response(e)))
 
     def solve_values(self, request: HttpRequest, field_info: FunctionParameters, request_path_params: dict[str, str], response_object: HttpResponse) -> dict[str, Any]:
         values = {}
