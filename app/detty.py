@@ -75,9 +75,6 @@ class DeTTy:
                         break
                     request = HttpRequest(incoming_request)
                     response = self.get_default_http_response(request.method)
-                    if request.request_headers.get('Connection', '') is 'close':
-                        response.response_headers['Connection'] = 'close'
-                        break
                     func, field_info, path_params = self.path_registry.match(request.resource, request.method)
                     values = self.solve_values(request, field_info, path_params, response)
                     print(path_params)
@@ -89,8 +86,10 @@ class DeTTy:
                         response.response_body = response_body
                         response.media_type = self._infer_media_type(response_body)
                     response.compress_body(request.extract_accept_encodings())
-                    print(response)
                     connection.send(bytes(response))
+                    if request.request_headers.get('Connection', '') == 'close':
+                        response.response_headers['Connection'] = 'close'
+                        break
                 except Exception as e:
                     traceback.print_exc()
                     connection.send(bytes(self.get_error_response(e)))
