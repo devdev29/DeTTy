@@ -66,13 +66,14 @@ class DeTTy:
 
     def handle_connection(self, connection: socket.socket) -> None:
         """Handle a single connection - can be run in a thread."""
+        close_connection: bool = False
         try:
             connection.settimeout(5.0)
             while True:
                 try:
                     incoming_request = connection.recv(1024).decode()
                     if not incoming_request:
-                        break
+                        close_connection = True
                     request = HttpRequest(incoming_request)
                     response = self.get_default_http_response(request.method)
                     func, field_info, path_params = self.path_registry.match(request.resource, request.method)
@@ -86,9 +87,11 @@ class DeTTy:
                         response.response_body = response_body
                         response.media_type = self._infer_media_type(response_body)
                     response.compress_body(request.extract_accept_encodings())
-                    connection.send(bytes(response))
                     if request.request_headers.get('Connection', '') == 'close':
                         response.response_headers['Connection'] = 'close'
+                        close_connection = True
+                    connection.send(bytes(response))
+                    if (close_connection):
                         break
                 except Exception as e:
                     traceback.print_exc()
