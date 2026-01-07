@@ -1,12 +1,13 @@
-from ast import Param
 import inspect
-from typing import Any, Type, Optional
+
+from typing import Any, Type, Optional, Union
 from enum import Enum
 from dataclasses import dataclass, field
+from typing_extensions import override
 
-from pydantic import TypeAdapter, ValidationError, type_adapter
+from pydantic import TypeAdapter, ValidationError 
+from pydantic_core import from_json
 
-from app.http_request import HttpRequest
 
 allowed_text_types = [str, int, float, bool]
 
@@ -27,15 +28,10 @@ class AnnotatedParameter:
     default_value: Any = field(default_factory=lambda: EMPTY_DEFAULT)
 
     def __post_init__(self):
+        self._type_adapter = TypeAdapter(self.annotation)
         if self.default_value is not EMPTY_DEFAULT:
             print(self.default_value)
             self.default_value = self._type_adapter.validate_python(self.default_value)
-
-    @property
-    def _type_adapter(self) -> TypeAdapter[Any]:
-        if self.annotation is not None:
-            return TypeAdapter(self.annotation)
-        raise ValueError("cannot create type adapter without annotation")
 
     @property
     def request_key(self) -> str:
@@ -76,11 +72,18 @@ class Header(AnnotatedParameter):
     def request_key(self) -> str:
         """Headers use header_name as the lookup key."""
         return self.header_name
+
 @dataclass
 class Body(AnnotatedParameter):
     def __post_init__(self):
         super().__post_init__()
         self.category = ParamCategory.BODY
+    
+    @override
+    def validate_value(self, value: Union[str, bytes]) -> Any:
+        data_dict = from_json(value, allow_partial=True)
+        return super().validate_value(data_dict)
+
 
 @dataclass
 class FunctionParameters:
@@ -109,3 +112,4 @@ class FunctionParameters:
     
     def _get_arguments_by_annotation(self, annotation: Type[Any]) -> list[AnnotatedParameter]:
         return [argument for argument in self.arguments if argument.annotation == annotation]
+

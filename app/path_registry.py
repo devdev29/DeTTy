@@ -93,7 +93,7 @@ class PathRegistry:
                 if param_name in path_params_list:
                     param_class = Path(field_name=param_name, annotation=base_type)
                     field_info.path_arguments[param_name] = param_class
-                elif isinstance(base_type, (BaseModel, list, dict, tuple)):
+                elif isinstance(base_type, (list, dict, tuple)) or issubclass(base_type, BaseModel):
                     param_class = Body(field_name=param_name, annotation=base_type, default_value=param.default)
                     field_info.body_arguments[param_name] = param_class
                 elif base_type is HttpResponse:
@@ -109,3 +109,4 @@ class PathRegistry:
                 field_info.argument_category(param_class.category)[param_name] = param_class
             field_info.arguments.append(param_class)
         return field_info
+

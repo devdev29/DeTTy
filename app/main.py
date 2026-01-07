@@ -1,8 +1,8 @@
 import os
 
-import click
-
 from typing import Annotated
+
+from pydantic import BaseModel
 
 from app.detty import DeTTy
 from app.models import Header, Body
@@ -45,11 +45,15 @@ def create_file(filename: str, file_body: Annotated[str, Body()]):
     with open(file_path, 'wb') as file:
         file.write(file_body.encode('ASCII'))
 
-@click.command()
-@click.option('--directory', type=click.Path(exists=True), default='/tmp/')
-def run_main(directory: str):
-    print(directory)
-    app.run(multithreaded=True)
+class Person(BaseModel):
+    name: str
+    age: int
+    gender: str
+
+@app.register('/person/change_name/{name}', method='POST')
+def change_name(name: str, person: Person):
+    person.name = name
+    return person.model_dump_json()
 
 if __name__ == "__main__":
-    run_main()
+   app.run(multithreaded=True) 
