@@ -56,4 +56,6 @@ def change_name(name: str, person: Person):
     return person.model_dump_json()
 
 if __name__ == "__main__":
-   app.run(multithreaded=True) 
+    # Run development server
+    # For production, use: gunicorn app.main:app
+    app.run(port=4221, verbose=True) 

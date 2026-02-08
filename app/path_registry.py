@@ -6,9 +6,8 @@ from typing import Annotated, Optional, Callable, get_origin, get_args
 from pydantic import BaseModel
 
 from app.exceptions import PathAlreadyExistsError, MissingPathParameterError, PathNotFoundError
-from app.http_request import HttpRequest
 from app.http_response import HttpResponse
-from app.models import FunctionParameters, Path, Query, Header, Body
+from app.models import FunctionParameters, Path, Query, Body
 
 class PathRegistry:
     registered_paths = {}
@@ -109,4 +108,3 @@ class PathRegistry:
                 field_info.argument_category(param_class.category)[param_name] = param_class
             field_info.arguments.append(param_class)
         return field_info
-

@@ -26,12 +26,14 @@ class AnnotatedParameter:
     annotation: Optional[Type[Any]] = None
     category: Optional[ParamCategory] = None
     default_value: Any = field(default_factory=lambda: EMPTY_DEFAULT)
+    _type_adapter: Optional[TypeAdapter] = field(default=None, init=False, repr=False)
 
     def __post_init__(self):
-        self._type_adapter = TypeAdapter(self.annotation)
-        if self.default_value is not EMPTY_DEFAULT:
-            print(self.default_value)
-            self.default_value = self._type_adapter.validate_python(self.default_value)
+        if self.annotation is not None:
+            self._type_adapter = TypeAdapter(self.annotation)
+            if self.default_value is not EMPTY_DEFAULT:
+                print(self.default_value)
+                self.default_value = self._type_adapter.validate_python(self.default_value)
 
     @property
     def request_key(self) -> str:
@@ -43,10 +45,12 @@ class AnnotatedParameter:
         return self.default_value is not EMPTY_DEFAULT
 
     def validate_value(self, value: Any) -> Any:
+        if self._type_adapter is None and self.annotation is not None:
+            self._type_adapter = TypeAdapter(self.annotation)
         try:
             return self._type_adapter.validate_python(value)
         except ValidationError as ve:
-            raise ValidationError(f"Invalid value for argument {self.field_name}: {ve}")
+            raise ValueError(f"Invalid value for argument {self.field_name}: {ve}")
 @dataclass
 class Path(AnnotatedParameter):
     def __post_init__(self):

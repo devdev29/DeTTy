@@ -33,6 +33,31 @@ class HttpResponse:
         headers += '\r\n'
         
         return headers.encode('ASCII') + body_bytes
+    
+    def to_wsgi_response(self) -> tuple[str, list[tuple[str, str]], bytes]:
+        """
+        Convert to WSGI format.
+        
+        Returns:
+            tuple: (status, headers_list, body)
+                - status: "200 OK"
+                - headers_list: [("Content-Type", "text/plain"), ...]
+                - body: response body as bytes
+        """
+        status = f"{self.status_code} {self.reason_phrase}"
+        
+        # Get body as bytes
+        if isinstance(self.response_body, bytes):
+            body_bytes = self.response_body
+        else:
+            body_bytes = self.response_body.encode('utf-8') if self.response_body else b''
+        
+        # Build headers list
+        self.response_headers['Content-Type'] = self.media_type
+        self.response_headers['Content-Length'] = str(len(body_bytes))
+        headers_list = [(k, str(v)) for k, v in self.response_headers.items()]
+        
+        return status, headers_list, body_bytes
 
     def __str__(self):
         status_line = f'{self.http_version} {self.status_code} {self.reason_phrase}\r\n'
